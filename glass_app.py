@@ -1,12 +1,11 @@
 import streamlit as st
 import random
 from docx import Document
-import docx2txt
 import io
 
 # Page configuration
 st.set_page_config(
-    page_title="AuraGen - Smart Paper Generator",
+    page_title="AuraGen - Smart Word File Reader",
     page_icon="📄",
     layout="wide"
 )
@@ -73,34 +72,27 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<div style='text-align: center;'><h1>✨ AuraGen: Smart Word File Reader</h1><p>যেকোনো .doc বা .docx ফাইল থেকে সরাসরি প্রশ্নপত্র তৈরি করুন</p></div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align: center;'><h1>✨ AuraGen: Smart Word File Reader</h1><p>আপনার .docx ফাইল থেকে সরাসরি প্রশ্নপত্র তৈরি করুন</p></div>", unsafe_allow_html=True)
 
-# File Uploader supporting both formats
-uploaded_file = st.file_uploader("📂 আপনার প্রশ্নব্যাংক (.doc বা .docx ফাইল) এখানে আপলোড করুন", type=["doc", "docx"])
+# File Uploader focused on DOCX
+uploaded_file = st.file_uploader("📂 আপনার প্রশ্নব্যাংক (.docx ফাইল) এখানে আপলোড করুন", type=["docx"])
 
 if uploaded_file is not None:
     all_questions = []
-    file_name = uploaded_file.name.lower()
     
     try:
-        if file_name.endswith('.docx'):
-            doc = Document(io.BytesIO(uploaded_file.read()))
-            for para in doc.paragraphs:
-                line = para.text.strip()
-                if len(line) > 5:
-                    all_questions.append(line)
-        else:
-            # Universal text extractor for older .doc files
-            text = docx2txt.process(io.BytesIO(uploaded_file.read()))
-            for line in text.split('\n'):
-                clean_line = line.strip()
-                if len(clean_line) > 5:
-                    all_questions.append(clean_line)
+        # Secure memory layout using bytes io
+        doc = Document(io.BytesIO(uploaded_file.read()))
+        for para in doc.paragraphs:
+            line = para.text.strip()
+            # If line has text and looks like a question or valid point
+            if len(line) > 3:
+                all_questions.append(line)
     except Exception as e:
-        st.error("❌ ফাইলটি পড়তে সমস্যা হয়েছে। দয়া করে ফাইলটি .docx ফরম্যাটে সেভ করে আপলোড করার চেষ্টা করুন।")
+        st.error("❌ ফাইলটি প্রসেস করতে সমস্যা হয়েছে। দয়া করে নিশ্চিত করুন ফাইলটি সঠিকভাবে .docx ফরম্যাটে সেভ করা।")
 
     if all_questions:
-        st.success(f"✅ আপনার ফাইল থেকে সফলভাবে {len(all_questions)} টি প্রশ্ন লোড হয়েছে!")
+        st.success(f"✅ আপনার ফাইল থেকে সফলভাবে {len(all_questions)} টি লাইন/প্রশ্ন লোড হয়েছে!")
         
         col_config, col_preview = st.columns([1, 1.8], gap="large")
         
@@ -108,7 +100,7 @@ if uploaded_file is not None:
             st.markdown("### ⚙️ কনফিগারেশন")
             school_name = st.text_input("🏫 শিক্ষা প্রতিষ্ঠানের নাম", value="NOAKHALI SCIENCE & TECHNOLOGY UNIVERSITY")
             exam_name = st.text_input("📝 পরীক্ষার নাম", value="ANNUAL EVALUATION / TERM TEST")
-            subject_name = st.text_input("📖 বিষয়ের নাম (Subject)", value="Physics")
+            subject_name = st.text_input("📖 বিষয়ের নাম (Subject)", value="Chemistry")
             
             num_questions = st.number_input("📊 কয়টি প্রশ্ন সিলেক্ট করতে চান?", min_value=1, max_value=len(all_questions), value=min(10, len(all_questions)))
             generate_btn = st.button("🚀 প্রশ্নপত্র তৈরি করুন")
@@ -140,4 +132,4 @@ if uploaded_file is not None:
                 paper_html += "</div>"
                 st.markdown(paper_html, unsafe_allow_html=True)
 else:
-    st.info("💡 অ্যাপটি ব্যবহার করতে প্রথমে আপনার যেকোনো একটি Word (.doc/.docx) ফাইল আপলোড করুন।")
+    st.info("💡 অ্যাপটি ব্যবহার করতে প্রথমে আপনার মেইন ফাইলটি মোবাইলে .docx ফরম্যাটে Save As করে এখানে আপলোড করুন।")
